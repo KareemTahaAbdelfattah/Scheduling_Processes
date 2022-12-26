@@ -79,7 +79,7 @@ int Data(processes P[]){
 
 // FCFS Algorithm
 void FCFS(processes P[],int n){
-	processes temp[10];
+	processes temp[n];
 	int sumw=0,sumt=0;
 	int x = 0;
 	float avgwt=0.0,avgta=0.0;
@@ -96,11 +96,20 @@ void FCFS(processes P[],int n){
     sumt = temp[0].turnarround_time = temp[0].running_time;
 
     for(i=1;i<n;i++){
-        temp[i].completion_time = temp[i - 1].completion_time + temp[i].running_time;
-        temp[i].waiting_time = (temp[i - 1].running_time + temp[i - 1].arrival_time + temp[i-1].waiting_time) - temp[i].arrival_time;
-        temp[i].turnarround_time = (temp[i].waiting_time + temp[i].running_time);
-        sumw+=temp[i].waiting_time;
-        sumt+=temp[i].turnarround_time;
+        if(temp[i].arrival_time > temp[i].completion_time){
+            temp[i].completion_time = temp[i].arrival_time + temp[i].running_time;
+            temp[i].waiting_time = 0;
+            temp[i].turnarround_time = temp[i].completion_time - temp[i].arrival_time;
+            sumw+=temp[i].waiting_time;
+            sumt+=temp[i].turnarround_time;
+        }
+        else{
+            temp[i].completion_time = temp[i - 1].completion_time + temp[i].running_time;
+            temp[i].waiting_time = (temp[i - 1].running_time + temp[i - 1].arrival_time + temp[i-1].waiting_time) - temp[i].arrival_time;
+            temp[i].turnarround_time = (temp[i].waiting_time + temp[i].running_time);
+            sumw+=temp[i].waiting_time;
+            sumt+=temp[i].turnarround_time;
+        }
     }
 
 
@@ -139,52 +148,46 @@ void FCFS(processes P[],int n){
 
 //Shortest Job First - Pre-emptive
 void SJCF(processes P[],int n){
-    
-	int i,t_total=0,tcurr,b[10],min_at,j,x,min_bt;
+	int i,t_total=0,tcurr,b[n],j,x,min_rt;
 	int sumw=0,sumt=0;
 	float avgwt=0.0,avgta=0.0;
-	processes temp[10],t;
-
+	processes temp[n];
 	for(i=0;i<n;i++){
 		temp[i]=P[i];
 		t_total+=P[i].running_time;
 	}
-
+	temp[0].completion_time = temp[0].running_time + temp[0].arrival_time;
 	FCFS_sort(temp,n);
 
-	for(i=0;i<n;i++)
-		b[i] = temp[i].running_time;
+	for(i=0;i<n;i++) b[i] = temp[i].running_time;
 
 	i=j=0;
-	printf("\n GANTT CHART\n\n %d %s",i,temp[i].name);
+
+	printf("\n GANTT CHART\n\n %d %s",i+1,temp[i].name);
+
 	for(tcurr=0;tcurr<t_total;tcurr++){
 
-		if(b[i] > 0 && temp[i].arrival_time <= tcurr)
-			b[i]--;
+		if(b[i] > 0 && temp[i].arrival_time <= tcurr) b[i]--;
 
-		if(i!=j)
-			printf(" %d %s",tcurr,temp[i].name);
+		if(i!=j) printf(" %d %s",tcurr,temp[i].name);
 
 		if(b[i]<=0 && temp[i].flag != 1){
-
 			temp[i].flag = 1;
 			temp[i].waiting_time = (tcurr+1) - temp[i].running_time - temp[i].arrival_time;
 			temp[i].turnarround_time = (tcurr+1) - temp[i].arrival_time;
 			sumw+=temp[i].waiting_time;
 			sumt+=temp[i].turnarround_time;
 		}
-		j=i;	min_bt = 999;
+		j=i;
+		min_rt = 1000000000;
 		for(x=0;x<n;x++){
-
 			if(temp[x].arrival_time <= (tcurr+1) && temp[x].flag != 1){
-
-				if(min_bt != b[x] && min_bt > b[x]){
-					min_bt = b[x];
+				if(min_rt != b[x] && min_rt > b[x]){
+					min_rt = b[x];
 					i=x;
 				}
 			}
 		}
-
 	}
 	printf(" %d",tcurr);
 	avgwt = (float)sumw/n;	avgta = (float)sumt/n;
